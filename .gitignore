@@ -1,0 +1,16 @@
+node_modules/
+dist/
+playwright-report/
+test-results/
+reports/
+daily-report.html
+daily-report.json
+data/*.db
+data/*.db-journal
+data/*.db-wal
+data/*.db-shm
+.env
+.env.local
+.DS_Store
+Thumbs.db
+

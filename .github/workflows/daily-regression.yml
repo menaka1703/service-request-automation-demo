@@ -1,0 +1,106 @@
+name: Daily Automated Regression
+
+on:
+  schedule:
+    # 08:47 AM IST is 03:17 AM UTC (IST is UTC+5:30 -> 8:47 - 5:30 = 3:17)
+    - cron: '17 3 * * *'
+  workflow_dispatch:
+    inputs:
+      headless:
+        description: 'Run tests in headless mode'
+        type: boolean
+        default: true
+      environment:
+        description: 'Target test environment'
+        type: choice
+        options:
+          - local-runner
+          - staging-preview
+        default: local-runner
+
+jobs:
+  daily-regression:
+    name: Run Daily Playwright Test Matrix
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Install Playwright Chromium Browser & OS Dependencies
+        run: npx playwright install --with-deps chromium
+
+      - name: Prepare Clean Isolated Test Database
+        run: |
+          mkdir -p data
+          rm -f data/test_service_requests.db*
+          npm run seed
+        env:
+          USE_TEST_DB: 'true'
+
+      - name: Run Full 10-Scenario Playwright Suite
+        id: playwright_tests
+        run: npm run test:e2e
+        env:
+          CI: 'true'
+          USE_TEST_DB: 'true'
+
+      - name: Generate Consolidated Daily Test Report (HTML & JSON)
+        if: always()
+        run: npm run report:generate
+        env:
+          CI: 'true'
+          TESTED_BUILD: 'v1.0.0-${{ github.sha }}'
+
+      - name: Generate Job Status Summary
+        if: always()
+        run: |
+          echo "## 📊 Daily Regression Automation Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Trigger Event:** ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Scheduled Cadence:** Daily at 08:47 AM IST (03:17 UTC)" >> $GITHUB_STEP_SUMMARY
+          echo "- **Execution Status:** ${{ steps.playwright_tests.outcome == 'success' && '✅ PASS' || '❌ FAIL' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit Ref:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🧪 Automated Scenarios Tested" >> $GITHUB_STEP_SUMMARY
+          echo "1. Create Service Request" >> $GITHUB_STEP_SUMMARY
+          echo "2. View Service Request Details" >> $GITHUB_STEP_SUMMARY
+          echo "3. Edit Service Request" >> $GITHUB_STEP_SUMMARY
+          echo "4. Delete Service Request & Confirmation Modal" >> $GITHUB_STEP_SUMMARY
+          echo "5. Required-field Validation & Minimum Lengths" >> $GITHUB_STEP_SUMMARY
+          echo "6. Keyword Search & Multi-Criteria Filtering" >> $GITHUB_STEP_SUMMARY
+          echo "7. Pagination Controls & Traversal Boundaries" >> $GITHUB_STEP_SUMMARY
+          echo "8. Status Transitions & Quick Table Updates" >> $GITHUB_STEP_SUMMARY
+          echo "9. Duplicate Submission Guard via Idempotency-Key" >> $GITHUB_STEP_SUMMARY
+          echo "10. API REST Endpoints & SQLite ACID Persistence" >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload Consolidated Daily Test Report Artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: consolidated-daily-reports
+          path: |
+            daily-report.html
+            daily-report.json
+            playwright-report/test-results.json
+            playwright-report/
+            reports/
+          retention-days: 30
+
+      - name: Upload Screenshots & Video Traces (On Failure)
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: regression-failure-artifacts
+          path: test-results/
+          retention-days: 30
+
