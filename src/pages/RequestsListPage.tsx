@@ -56,14 +56,15 @@ export const RequestsListPage: React.FC<RequestsListPageProps> = ({
   // Status updating state (for API calls)
   const [updatingId, setUpdatingId] = useState<string | null>(null);
 
-  // Debounce search input
+  // Debounce search input (only reset pagination when search term actually changes)
   useEffect(() => {
+    if (searchTerm === debouncedSearch) return;
     const timer = setTimeout(() => {
       setDebouncedSearch(searchTerm);
       setPagination((prev) => ({ ...prev, page: 1 }));
     }, 300);
     return () => clearTimeout(timer);
-  }, [searchTerm]);
+  }, [searchTerm, debouncedSearch]);
 
   const loadRequests = useCallback(async () => {
     try {
