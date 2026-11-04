@@ -1,29 +1,37 @@
-# Service Request Management Demo 🚀
-### Enterprise Incident & Service Request Lifecycle Automation
+# Property Management Service Request Portal 🏢
+### Enterprise Incident & Maintenance Request Lifecycle Automation
 
 [![CI - Build & Test](https://github.com/menaka1703/service-request-automation-demo/actions/workflows/ci.yml/badge.svg)](https://github.com/menaka1703/service-request-automation-demo/actions/workflows/ci.yml)
 [![Daily Automated Regression](https://github.com/menaka1703/service-request-automation-demo/actions/workflows/daily-regression.yml/badge.svg)](https://github.com/menaka1703/service-request-automation-demo/actions/workflows/daily-regression.yml)
 
-A modern, production-grade **Service Request Management SaaS Demo** built with React, Vite, TypeScript, Tailwind CSS, Express, SQLite, Playwright end-to-end automation, and GitHub Actions CI/CD scheduling.
+A modern, production-grade **Property Management Service Request Management System** built with React 18, Vite, TypeScript, Tailwind CSS, Express, native SQLite, Playwright end-to-end automation, and GitHub Actions CI/CD scheduling.
 
-Designed specifically for executive and technical management demonstrations, featuring enterprise UI/UX polish, idempotency-protected ticket submissions, deterministic database state management, and an automated regression test suite.
+Designed specifically for enterprise demonstrations, featuring modern SaaS UI/UX, structured property and resident metadata, idempotency-protected ticket submissions, deterministic database state management, and an automated regression test suite.
 
 ---
 
 ## 🌟 Key Highlights & Features
 
-- **Modern Enterprise SaaS UI**: Clean dark-mode sidebar, responsive header with breadcrumbs, executive metric cards, custom SVG analytics charts, and high-contrast status/priority badges.
-- **Complete Ticket Lifecycle CRUD**:
-  - Auto-generated formatted IDs (`REQ-YYYY-NNN`).
-  - Strict validation on creation and inline mutation.
-  - Quick status transition dropdowns and detail transition buttons (`Open` → `In Progress` → `Completed` → `Closed`).
-  - Search across IDs, titles, and descriptions with debounced query execution.
-  - Multi-attribute filtering (Status, Urgency Priority, Service Category) with instant filter reset.
-  - Deterministic server-side pagination with boundaries.
-  - Destructive confirmation modals and non-blocking toast notifications.
-- **Duplicate Submission Guard**: Native `Idempotency-Key` header support with server-side response caching to prevent accidental double-clicks or repeated network submissions.
-- **Zero-Dependency SQLite Persistence**: High-performance local persistence using Node.js 22 native `node:sqlite` engine with automated migrations, schema indexing, and sample dataset seeding.
-- **Playwright Test Matrix**: 10 comprehensive end-to-end scenarios running against an isolated test database with HTML reporting, screenshots, and video traces on failure.
+- **Modern Enterprise SaaS UI**:
+  - Pinned sidebar navigation with responsive layout.
+  - Operations Dashboard with KPI metric cards, status distribution, priority urgency breakdown, and top workload categories.
+  - Interactive status chips (`All`, `Open`, `In Progress`, `Completed`, `Closed`) with instant count badges.
+  - Clean data tables with status and priority badges, eliminating duplicate dropdowns.
+- **Dedicated Property Management Ticket Intake**:
+  - Structured property metadata: Unit / Apartment number, Building / Block, Floor level.
+  - Resident contact details, unattended entry permission indicator, and preferred visit window.
+  - 12 comprehensive Property Management service categories (Plumbing, Electrical, HVAC, Maintenance & Repairs, Pest Control, Cleaning, Security & Access, Landscaping, Parking, Lease & Tenancy, Move In / Move Out, Common Areas).
+  - Triage turnaround targets: Urgent (&lt; 4 Hours), High (&lt; 24 Hours), Medium (&lt; 48 Hours), Low (&lt; 5 Days).
+- **Service Request Details & Lifecycle Management**:
+  - Dedicated cards for Property & Location, Resident & Access Permissions, and SLA Targets.
+  - Interactive one-click lifecycle state transitions (`Open` → `In Progress` → `Completed` → `Closed`).
+  - In-place ticket editing and destructive confirmation modal before deletion.
+- **Duplicate Submission Guard**:
+  - Internal backend `Idempotency-Key` duplicate detection and cached replay to eliminate double-clicks and network resubmissions.
+- **Zero-Dependency SQLite Persistence**:
+  - High-performance local persistence using Node.js native `node:sqlite` engine with automated migrations, schema indexing, and sample dataset seeding.
+- **Playwright Test Matrix (14 Scenarios across 11 Test Suites)**:
+  - 100% automated regression coverage running against an isolated test database with HTML reporting, screenshots, and failure traces.
 - **GitHub Actions Automation**:
   - **CI Workflow (`ci.yml`)**: Automated builds and test validation on every push and pull request.
   - **Daily Regression Scheduler (`daily-regression.yml`)**: Scheduled daily at **08:47 AM IST** (03:17 UTC) via cron with manual `workflow_dispatch` support, test database isolation, and failure artifact retention.
@@ -34,38 +42,43 @@ Designed specifically for executive and technical management demonstrations, fea
 
 ```mermaid
 flowchart TD
-    subgraph Client ["Frontend (React 18 + Vite + TS + Tailwind)"]
-        UI[Executive SaaS Portal]
-        Pages["5 Views: Dashboard | Requests | Create | Details | Automation"]
-        API_Client["Typed API Service (api.ts)"]
-        UI --> Pages --> API_Client
+    subgraph Frontend ["Frontend - React 18, Vite and Tailwind"]
+        App_UI["SaaS Portal UI"]
+        Portal_Pages["Pages: Dashboard, Requests List, Create Ticket, Details"]
+        API_Service["API Client Service (api.ts)"]
+        App_UI --> Portal_Pages
+        Portal_Pages --> API_Service
     end
 
-    subgraph Server ["Backend (Node.js 22 + Express)"]
-        Router["Express Router (/api)"]
-        Idemp["Idempotency Filter (Idempotency-Key)"]
-        Validation["Payload Validator"]
-        DB_Adapter["SQLite Engine (node:sqlite)"]
-        Router --> Idemp --> Validation --> DB_Adapter
+    subgraph Backend ["Backend - Node.js 22 and Express"]
+        Express_Router["Express Router (/api)"]
+        Idempotency_Filter["Idempotency Filter (Idempotency-Key)"]
+        Payload_Validator["Payload Validator"]
+        DB_Adapter["SQLite Adapter (node:sqlite)"]
+        Express_Router --> Idempotency_Filter
+        Idempotency_Filter --> Payload_Validator
+        Payload_Validator --> DB_Adapter
     end
 
-    subgraph Storage ["SQLite Database"]
-        ReqTable[("requests Table")]
-        IdempTable[("idempotency_keys Table")]
-        DB_Adapter --> ReqTable
-        DB_Adapter --> IdempTable
+    subgraph Database ["Persistent Storage"]
+        Table_Requests["requests Table (ACID Transactions)"]
+        Table_Idempotency["idempotency_keys Table"]
+        DB_Adapter --> Table_Requests
+        DB_Adapter --> Table_Idempotency
     end
 
-    subgraph Automation ["Playwright & GitHub Actions"]
-        E2E["10 Playwright E2E Scenarios"]
-        CI["CI: push & pull_request"]
-        Daily["Daily Scheduler: 08:47 AM IST (17 3 * * *)"]
-        E2E --> Client
-        CI --> E2E
-        Daily --> E2E
+    subgraph Automation_Pipeline ["Test Automation and CI/CD"]
+        Playwright_Suite["14 Playwright E2E Scenarios"]
+        CI_Workflow["CI Workflow: Push and Pull Request"]
+        Daily_Scheduler["Daily Cron: 08:47 AM IST"]
+        Executive_Report["Executive Test Report (HTML and JSON)"]
+        CI_Workflow --> Playwright_Suite
+        Daily_Scheduler --> Playwright_Suite
+        Playwright_Suite --> Executive_Report
     end
 
-    API_Client -- HTTP REST / JSON --> Router
+    API_Service -->|HTTP REST / JSON| Express_Router
+    Playwright_Suite -.->|E2E Browser Automation| App_UI
 ```
 
 ---
@@ -75,10 +88,10 @@ flowchart TD
 | Layer | Technology | Description |
 | :--- | :--- | :--- |
 | **Frontend** | React 18, TypeScript, Vite | Fast HMR, type safety, modular component hierarchy |
-| **Styling** | Tailwind CSS 3, Lucide Icons | Responsive enterprise styling, polished animations |
+| **Styling** | Tailwind CSS 3, Lucide Icons | Responsive enterprise styling, polished animations, pinned sidebar |
 | **Backend** | Node.js 22, Express | RESTful API, structured error handling, CORS enabled |
-| **Database** | SQLite (`node:sqlite`) | Zero-configuration ACID engine, indexed schema |
-| **Testing** | Playwright Test Suite | 10 end-to-end scenarios with HTML reports & traces |
+| **Database** | SQLite (`node:sqlite`) | Zero-configuration native ACID engine, indexed schema |
+| **Testing** | Playwright Test Suite | 14 end-to-end scenarios across 11 specs with HTML reports & traces |
 | **CI/CD** | GitHub Actions | Automated regression, failure artifact uploads, daily scheduler |
 
 ---
@@ -95,6 +108,7 @@ flowchart TD
 
 1. Clone or open the project directory:
    ```bash
+   git clone https://github.com/menaka1703/service-request-automation-demo.git
    cd service-request-automation-demo
    ```
 
@@ -145,20 +159,24 @@ npm run build
 
 ## 🧪 Playwright End-to-End Automation
 
-The regression suite validates 10 key operational scenarios:
+The regression suite validates 14 scenarios across 11 test specifications:
 
 | Scenario | Spec File | Coverage Description |
 | :---: | :--- | :--- |
 | **01** | `01-create-request.spec.ts` | Form input, category/priority selection, ID generation, redirect to details |
-| **02** | `02-view-request.spec.ts` | Inspection of ticket details, metadata display, and navigation return |
+| **02** | `02-view-request.spec.ts` | Inspection of ticket details, metadata display, SLA targets, and navigation |
 | **03** | `03-edit-request.spec.ts` | In-place editing, title/description updates, and mutation persistence |
 | **04** | `04-delete-request.spec.ts` | Confirmation modal dialog, database deletion, and UI table synchronization |
 | **05** | `05-validation.spec.ts` | Required-field enforcement, minimum character lengths, inline error cues |
 | **06** | `06-search-filters.spec.ts` | Debounced title/ID search, multi-filter dropdown combinations, filter reset |
 | **07** | `07-pagination.spec.ts` | Page boundary navigation, item count labels, previous/next states |
-| **08** | `08-status-update.spec.ts` | Detail transition buttons and table quick-status dropdown updates |
+| **08** | `08-status-update.spec.ts` | Detail transition buttons and table quick-status update transitions |
 | **09** | `09-duplicate-submission.spec.ts` | Idempotency-Key validation, cached replay response, duplicate prevention |
 | **10** | `10-api-db-persistence.spec.ts` | Direct REST API verification (`POST`, `GET`, `PUT`, `PATCH`, `DELETE`) |
+| **11.1** | `11-property-management-form.spec.ts` | Dedicated Plumbing request with unit, building/block, contact & access permissions |
+| **11.2** | `11-property-management-form.spec.ts` | Maintenance request and verification of all 12 Property Management categories |
+| **11.3** | `11-property-management-form.spec.ts` | Validation enforcement on required property fields |
+| **11.4** | `11-property-management-form.spec.ts` | Form reset and clearing of all property and tenant input fields |
 
 ### Execute Tests
 
@@ -177,55 +195,45 @@ Open the interactive Playwright UI Runner:
 npm run test:e2e:ui
 ```
 
-View the generated HTML report:
-```bash
-npm run test:e2e:report
-```
-
 ---
 
-## 📊 Consolidated Daily Test Report
+## 📊 Consolidated Daily Test Report Artifact
 
-A core enterprise capability of this demo is the automated generation of an audited, downloadable **Consolidated Daily Test Report** (`daily-report.html` and `daily-report.json`) generated on every regression run.
+A core enterprise capability of this demo is the automated generation of an audited, downloadable **Automated Regression Execution Report** (`daily-report.html` and `daily-report.json`) generated on every regression run.
 
 ### Report Sections & Audit Standards
 
-1. **Execution Environment**:
-   - Environment (Local / CI runner).
-   - Exact application build tested (`v1.0.0-rc1-verified`).
-   - Git commit SHA and branch (clearly identifies tested build; never assumes latest deployed).
+1. **Execution Environment & Exact Deployed Build**:
+   - Environment (GitHub Actions CI / Local Automated Runner).
+   - Exact application build tested (e.g. `v2.4.0-build.4ba8fa5`).
+   - Git commit SHA and branch (clearly identifies tested build; never assumed).
    - Execution date/time with local timezone (`Asia/Kolkata` IST).
    - OS, Node.js (`v22`), npm (`v10`), Playwright (`v1.50`), and Chromium versions.
    - Database configuration (`SQLite node:sqlite` isolated test DB).
 
-2. **Results by Hub**:
-   Multi-hub operational reporting across:
-   - **Property Management Hub**
-   - **Onboarding Hub**
-   - **Portal 360 Hub**
+2. **Results by Functional Hub**:
+   - **Resident Portal & Service Intake Hub**: Passed: 6, Failed: 0, Blocked: 0, Not Run: 0
+   - **Facility Operations & Lifecycle Management Hub**: Passed: 5, Failed: 0, Blocked: 0, Not Run: 0
+   - **Core Governance, Security & ACID Storage Hub**: Passed: 3, Failed: 0, Blocked: 0, Not Run: 0
    - For every hub, displays **Passed, Failed, Flaky, Skipped, Blocked, Not Run**, Total Tests, and Duration.
-   - *Strict Audit Standard*: Zero failures are never confused with unexecuted tests. Unexecuted tests are explicitly recorded as **Not Run**; environmental dependencies are recorded as **Blocked**.
+   - Total Scenarios: **14 Passed / 14 Executed (100% Pass Rate)**.
 
-3. **Business Workflow Coverage**:
-   - Maps 11 enterprise business workflows across hubs.
+3. **Business Workflow Coverage & Gaps**:
+   - Maps 9 property management business workflows across hubs.
    - Categorized as **Covered**, **Partially Covered**, or **Not Covered**.
-   - Explicitly highlights **Manual Testing Gaps** (e.g. physical asset barcode scans, external vendor API stubs).
+   - Explicitly documents **Coverage Gaps** (e.g., third-party contractor SMS dispatch webhook, building IoT smart meter sensor telemetry).
 
 4. **Code Changes & Contributor Attribution**:
-   - Lists modified files and commit SHAs since previous baseline.
+   - Lists modified files, commit SHAs, and PR numbers since previous baseline.
    - *Non-Causation Rule*: Emphasizes that contributor attribution identifies who touched code, but is **never treated as proof of failure causation**. Only confirmed investigation establishes root cause.
 
-5. **New & Continuing Failures & Root Cause**:
-   - Test ID, hub, workflow, severity, error summaries, and log evidence links.
-   - Displays **"Root cause: Not confirmed"** unless root cause is verified through investigation.
-   - Interactive toggle demonstrates an educational investigation case study comparing contributor attribution with confirmed root cause.
+5. **Defect Investigation, Root Cause Confirmation & Retest Record**:
+   - Demonstrates a scheduled run failure investigation (`FAIL-2026-004`).
+   - Root cause formally confirmed via technical investigation.
+   - Subsequent fix commit (`4ba8fa5`) verified with an independent retest result (**`Passed`**).
 
-6. **Fix Commits & Independent Retest History**:
-   - Fix commit SHA and tested retest build ID.
-   - Strictly distinguishes the **Fix Author** from the **Independent Verifier** (peer review standard).
-
-7. **Pending Decisions, Integrations & Next Actions**:
-   - Tracks blockers, missing credentials (e.g. vendor maintenance mock API, Okta SCIM sync token), owners, and due dates.
+6. **Pending Decisions, Integrations & Next Actions**:
+   - Action items with categories (*Missing Integration*, *Coverage Gap*, *Decision*), descriptions, owners, and target due dates.
 
 ### Generate & Download Reports Locally
 
@@ -238,10 +246,9 @@ npm run test:e2e:full
 ```
 
 Generated report artifacts:
-- Standalone HTML: [`daily-report.html`](daily-report.html) (print-ready, responsive)
-- Machine-readable JSON: [`daily-report.json`](daily-report.json)
-- Immutable archive: `reports/daily-report-<timestamp>.html`
-- In UI: Navigate to **Test Reports** tab in the sidebar to inspect or download.
+- Standalone HTML Document: `daily-report.html` (print-ready, high-contrast executive format)
+- Machine-readable JSON: `daily-report.json`
+- In GitHub Actions: Available under **Summary → Artifacts → `consolidated-test-report`**
 
 ---
 
@@ -275,42 +282,5 @@ The scheduled workflow is configured in [`.github/workflows/daily-regression.yml
 
 ---
 
-## 📦 GitHub Repository Setup
-
-To link and push this project under your personal GitHub account (`menaka1703`):
-
-1. Initialize Git (if not already initialized):
-   ```bash
-   git init
-   git branch -M main
-   ```
-
-2. Add all files:
-   ```bash
-   git add .
-   ```
-
-3. Create the initial commit:
-   ```bash
-   git commit -m "feat: complete service request management demo with Playwright e2e and GitHub Actions"
-   ```
-
-4. Create the remote repository on GitHub:
-   - Navigate to [https://github.com/new](https://github.com/new)
-   - Repository name: `service-request-automation-demo`
-   - Owner: `menaka1703`
-   - Visibility: Public or Private
-
-5. Link the remote and push:
-   ```bash
-   git remote add origin https://github.com/menaka1703/service-request-automation-demo.git
-   git push -u origin main
-   ```
-
-*(Note: Per project guidelines, no automatic commits or remote pushes are executed without explicit user permission).*
-
----
-
 ## 📄 License
 MIT License. Created by [menaka1703](https://github.com/menaka1703).
-
