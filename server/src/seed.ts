@@ -152,7 +152,8 @@ export function seedInitialData() {
 
 // Allow running standalone `npm run seed`
 if (process.argv[1] && process.argv[1].endsWith('seed.ts')) {
-  resetDatabase();
+  initDb();         // Ensure schema (tables + indexes) exists before reset
+  resetDatabase();  // Now safe: tables exist
   seedInitialData();
   console.log('Database successfully seeded with property management sample requests!');
 }

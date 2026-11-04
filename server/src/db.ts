@@ -72,7 +72,9 @@ export function generateRequestId(): string {
 }
 
 // Reset helper (for tests and manual seed reset)
+// Always calls initDb() first to ensure tables exist before attempting DELETE
 export function resetDatabase() {
+  initDb();
   db.exec(`
     DELETE FROM requests;
     DELETE FROM idempotency_keys;
